@@ -1,0 +1,11 @@
+{
+  "name": "barra-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix barra run dev",
+    "serve": "npm --prefix barra run serve",
+    "start": "npm --prefix barra start",
+    "build": "npm --prefix barra run build",
+    "test": "npm --prefix barra test"
+  }
+}

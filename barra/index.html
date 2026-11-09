@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#111511" />
+    <meta name="description" content="Simula ventas de cafés y cócteles y descubre qué ingredientes necesitas reponer." />
+    <title>barra. — Cafés, cócteles y lo que hace falta</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/src/styles/main.css" />
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-view="day">
+    <a class="skip-link" href="#main-content">Ir al contenido</a>
+    <button class="navigation-scrim" id="navigation-scrim" type="button" aria-label="Cerrar menú"></button>
+    <aside id="primary-navigation" class="app-navigation" aria-label="Menú principal">
+      <button class="navigation-toggle" id="toggle-navigation" type="button" aria-label="Contraer menú" aria-expanded="true" title="Contraer menú" aria-controls="primary-navigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/><path class="toggle-arrow" d="m16 9-3 3 3 3"/></svg></button>
+      <div class="navigation-brand">
+        <a class="brand" href="/" aria-label="barra, inicio">
+          <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M8 12h15v8a6 6 0 0 1-6 6h-3a6 6 0 0 1-6-6v-8Z" stroke="currentColor" stroke-width="2"/><path d="M23 14h2a3 3 0 0 1 0 6h-2M7 29h18M13 8c-3-3 3-3 0-6M19 8c-3-3 3-3 0-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <span>barra<span class="brand-period">.</span></span>
+        </a>
+      </div>
+      <nav class="workspace-tabs" aria-label="Secciones de la barra">
+        <button type="button" class="view-tab is-active" data-view="day" aria-pressed="true" aria-label="Abastecimiento" title="Abastecimiento"><span data-icon="receipt"></span><span class="nav-label">Abastecimiento</span><span class="nav-count" id="mobile-reorder-count" hidden>0</span></button>
+        <button type="button" class="view-tab" data-view="catalog" aria-pressed="false" aria-label="La carta" title="La carta"><span data-icon="cup"></span><span class="nav-label">La carta</span></button>
+        <button type="button" class="view-tab" data-view="ingredients" aria-pressed="false" aria-label="Ingredientes" title="Ingredientes"><span data-icon="box"></span><span class="nav-label">Ingredientes</span></button>
+        <button type="button" class="view-tab" data-view="manual" aria-pressed="false" aria-label="Manual" title="Manual"><span data-icon="sparkles"></span><span class="nav-label">Manual</span></button>
+        <button type="button" class="view-tab" data-view="autopilot" aria-pressed="false" aria-label="My Autopilot" title="My Autopilot"><span data-icon="shield"></span><span class="nav-label">My Autopilot</span></button>
+      </nav>
+      <div class="navigation-footer">
+        <span class="simulation-badge" title="Simulación local"><span class="status-dot"></span><span class="nav-label">Simulación local</span></span>
+        <button class="button button-quiet reset-button" id="reset-demo" data-reset-demo type="button" aria-label="Reiniciar demo" title="Reiniciar demo"><span data-icon="reset"></span><span class="nav-label">Reiniciar demo</span></button>
+      </div>
+    </aside>
+
+    <main class="workspace" id="main-content" tabindex="-1">
+      <div class="content-layout">
+        <section class="catalog-section panel" id="catalog" aria-labelledby="catalog-title">
+          <div class="section-heading"><div class="heading-with-count"><h2 id="catalog-title">La carta</h2><span class="count-badge">31 bebidas</span></div><span class="catalog-hint"><span data-icon="cursor"></span> Un clic, una venta</span></div>
+          <div class="catalog-toolbar">
+            <div class="category-tabs" role="group" aria-label="Filtrar bebidas por categoría">
+              <button class="category-tab" type="button" data-category="beer" aria-pressed="false">Cervezas <span>4</span></button>
+              <button class="category-tab is-active" type="button" data-category="cocktail" aria-pressed="true">Cócteles <span>12</span></button>
+              <button class="category-tab" type="button" data-category="coffee" aria-pressed="false">Cafés <span>9</span></button>
+              <button class="category-tab" type="button" data-category="fresh" aria-pressed="false">Sin alcohol <span>6</span></button>
+            </div>
+            <label class="search-field"><span data-icon="search"></span><input id="product-search" type="search" placeholder="Bebida o ingrediente…" aria-label="Buscar bebida o ingrediente" autocomplete="off" /><kbd>/</kbd></label>
+          </div>
+          <div class="catalog-frame" id="catalog-frame" tabindex="0" role="region" aria-label="Catálogo de bebidas">
+            <div class="product-grid" id="product-grid"></div>
+            <div class="empty-search" id="empty-search" hidden><span data-icon="search"></span><h3>No encontramos esa bebida</h3><p>Prueba con otro nombre o ingrediente.</p><button class="button button-quiet" type="button" id="clear-filters">Ver todas las bebidas</button></div>
+          </div>
+          <div class="catalog-bottom"><p id="page-label"></p><div class="pagination"><button type="button" id="previous-page" aria-label="Página anterior">←</button><span id="page-number">1 / 2</span><button type="button" id="next-page" aria-label="Página siguiente">→</button></div></div>
+          <div class="sale-activity" id="sale-impact" aria-live="polite"></div>
+        </section>
+
+        <aside class="sidebar panel" aria-label="Ingredientes y reposición">
+          <div class="section-heading"><h2 id="inspector-title">Tu despensa, al día.</h2><span data-icon="layers"></span></div>
+          <p class="inspector-description">Define tu objetivo habitual y rellena las existencias cuando lo necesites.</p>
+          <section class="inspector-content" id="ingredients-panel" aria-label="Existencias de ingredientes" tabindex="0">
+            <div class="ingredient-storage-note"><p>Reiniciar llena el inventario hasta tus objetivos guardados y deja ventas, solicitudes y abastecimiento en 0.</p><button class="button button-quiet" data-reset-demo type="button">Reiniciar demo</button><p>Guardar un objetivo no añade existencias; usa «Rellenar hasta objetivo» para hacerlo.</p></div>
+            <div class="ingredient-sort"><label for="ingredient-sort">Ordenar ingredientes</label><select id="ingredient-sort"><option value="most">Más gastados primero</option><option value="least">Menos gastados primero</option><option value="name">Nombre · A–Z</option></select><small>Por consumo acumulado respecto al objetivo habitual.</small></div>
+            <div id="ingredients-list"></div>
+          </section>
+          <section class="inspector-content" id="replenishment-panel" aria-label="Pedido de reposición" tabindex="0" hidden>
+            <p class="reorder-intro">Cantidades sugeridas para volver a tener tu barra lista.</p>
+            <div id="replenishment-list"></div>
+          </section>
+          <div class="order-actions"><button class="button button-dark" id="copy-order" type="button"><span data-icon="copy"></span><span id="copy-order-label">Copiar reposición</span><span data-icon="arrow-up-right"></span></button><p>Solo lo que hace falta para tu siguiente servicio.</p></div>
+
+        </aside>
+
+        <section class="operations-view" id="day-view" aria-labelledby="day-title">
+          <header class="operations-heading"><div><p class="ops-eyebrow">REABASTECIMIENTO AUTOMÁTICO</p><h1 id="day-title">Abastecimiento</h1><p>Lo que falta, cuánto pedir y tu autorización final.</p></div><span class="ops-date" id="operations-date"></span></header>
+          <div class="day-layout">
+            <section class="receipt-card" aria-labelledby="receipt-title"><div class="receipt-brand">barra.</div><div class="receipt-heading"><h2 id="receipt-title">Pedido automático de insumos</h2><span class="ops-chip" id="receipt-status">Detectado</span></div><p class="receipt-caption">Se repone hasta el objetivo · Primero los insumos urgentes</p><div id="receipt-items"></div><div class="receipt-total"><span>Total a pedir</span><strong><span id="receipt-units">0</span> <small>unidades de compra</small></strong></div><div class="receipt-products-total"><span>Productos diferentes</span><span id="receipt-lines">0</span></div><p class="receipt-caption">Importe pendiente: todavía no hay precios ni cotización.</p><p id="order-policy-note" class="ops-policy-note"></p><button type="button" class="button button-dark ops-primary" id="close-order">Revisar y cerrar pedido <span data-icon="arrow-up-right"></span></button><button type="button" class="ops-text-button" id="example-order">Recalcular necesidades</button><p class="ops-local-note">Propuesta automática · Solicitud con aprobación humana</p></section>
+            <details class="ops-card day-source"><summary>Ver ventas y consumo</summary>          <div class="ops-metrics"><div><span>Unidades por pedir</span><strong id="day-sales">0</strong><small>Botellas, bolsas o envases</small></div><div><span>Ingredientes por reponer</span><strong id="day-reorder">0</strong><small>Según tus existencias</small></div><div><span>Solicitudes de hoy</span><strong id="day-orders">0</strong><small>Registradas en esta demo</small></div></div>
+<div class="ops-card-heading"><h2>Así va tu barra</h2><span class="ops-chip">En vivo</span></div><div class="ops-tabs" role="group" aria-label="Detalle de la jornada"><button type="button" data-day-tab="sales" class="is-active" aria-pressed="true">Ventas</button><button type="button" data-day-tab="consumption" aria-pressed="false">Consumo</button></div><div id="day-detail"></div></details>
+          </div>
+          <section class="ops-card request-history"><div class="ops-card-heading"><h2>Solicitudes registradas</h2><span class="ops-chip">Simulación</span></div><div id="request-history"></div></section>
+        </section>
+
+        <section class="operations-view" id="autopilot-view" aria-labelledby="autopilot-title">
+          <header class="operations-heading"><div><p class="ops-eyebrow">GOBERNANZA DE AGENTES</p><h1 id="autopilot-title">My Autopilot</h1><p>Tú defines el alcance. Cada solicitud pasa por ti.</p></div><button type="button" class="button button-quiet" id="pause-autopilot">Pausar Autopilot</button></header>
+          <div class="autopilot-banner"><span data-icon="shield"></span><div><strong id="autopilot-status">Aprobación humana obligatoria</strong><p>Controles de demostración. La autorización real y los pagos se conectarán más adelante.</p></div><span class="ops-chip">MPP / Stripe · Sin conectar</span></div>
+          <div class="ops-tabs governance-tabs" role="group" aria-label="Secciones de gobernanza"><button type="button" data-governance-tab="rules" class="is-active" aria-pressed="true">Reglas</button><button type="button" data-governance-tab="agents" aria-pressed="false">Agentes y permisos</button><button type="button" data-governance-tab="audit" aria-pressed="false">Registro</button></div>
+          <form id="governance-form" class="ops-card">
+            <div class="ops-card-heading"><h2>Tu política de operación</h2><span class="ops-chip" id="policy-save-state">Guardada localmente</span></div>
+            <div class="policy-fields"><label>Modo del agente<select name="mode"><option value="propose">Proponer y pedir aprobación</option><option value="observe">Solo observar</option></select><small>Sin ejecución autónoma de compras.</small></label><label>Envases por pedido<input name="maxPackages" type="number" min="1" max="200" required/><small>Botellas, bolsas o envases completos.</small></label><label>Solicitudes máximas por día<input name="maxDailyOrders" type="number" min="1" max="50" required/><small>Cuenta las solicitudes simuladas registradas.</small></label><label>Validez del borrador (minutos)<input name="expiresMinutes" type="number" min="1" max="60" required/><small>Después hay que revisar un nuevo borrador.</small></label></div>
+            <fieldset class="ingredient-permissions"><legend>Ingredientes que el agente puede solicitar</legend><div id="allowed-ingredients"></div></fieldset>
+            <div class="policy-footer"><p>Proveedor permitido: <strong>Proveedor de prueba</strong>. Los importes no se evalúan hasta disponer de precios.</p><button class="button button-dark" type="submit">Guardar reglas</button></div>
+          </form>
+          <section id="agents-panel" class="ops-card" hidden><div class="ops-card-heading"><h2>Permisos por agente</h2><span class="ops-chip">Mínimo acceso</span></div><div class="agent-row"><span data-icon="cup"></span><div><h3>Agente de barra</h3><p>Consultar inventario y registrar ventas simuladas.</p></div><span class="ops-chip">Sin pagos</span></div><div class="agent-row"><span data-icon="box"></span><div><h3>Agente de compras</h3><p>Leer necesidades y preparar borradores dentro de las reglas guardadas.</p></div><span class="ops-chip">Requiere aprobación</span></div><div class="agent-row"><span data-icon="shield"></span><div><h3>Responsable de la barra</h3><p>Revisar productos, autorizar cada solicitud y pausar el agente.</p></div><span class="ops-chip">Control humano</span></div><p class="ops-local-note">La clave de demo no autentica personas. No hay credenciales, mandatos ni permisos reales de Stripe configurados.</p></section>
+          <section id="audit-panel" class="ops-card" hidden><div class="ops-card-heading"><h2>Registro de la simulación</h2><span class="ops-chip">Solo este navegador</span></div><div id="audit-entries"></div></section>
+        </section>
+        <section class="manual-section panel" aria-labelledby="manual-title">
+          <div class="manual-header"><span class="manual-eyebrow">GUÍA DE LA DEMO</span><h2 id="manual-title">De una venta a una reposición.</h2><p>Todo lo que necesitas para probar tu idea, paso a paso.</p></div>
+          <div class="manual-stock"><div><strong>7,5 L</strong><span>Tequila Don Juan · 10 botellas</span></div><div><strong>7,5 L</strong><span>Tequila Don Pepe · 10 botellas</span></div><div><strong>12 L</strong><span>Leche de coco · 12 envases</span></div></div>
+          <details class="manual-step" open><summary><span>01</span> Vender y ver el consumo</summary><div><p>Abre <strong>La carta</strong>, elige una categoría y pulsa <strong>Vender</strong>. Cada clic suma una venta y descuenta los ingredientes de su receta. Puedes abrir <strong>Ver receta</strong> para consultar las cantidades.</p><p>Ejemplo: un latte usa <strong>18 g de café + 120 ml de leche de coco</strong>. El coco pasa de 12.000 a <strong>11.880 ml</strong> y el café de 3.600 a <strong>3.582 g</strong>.</p></div></details>
+          <details class="manual-step"><summary><span>02</span> Entender las existencias</summary><div><p><strong>14 ingredientes distintos</strong> significa catorce tipos de materia prima, cada uno con su propia cantidad. No significa diez unidades ni diez bebidas.</p><p>En <strong>Ingredientes</strong> puedes escribir tu <strong>Objetivo habitual</strong> en ml, g o botellas y pulsar <strong>Guardar objetivo</strong>. Será la cantidad que se use para calcular la reposición. Para añadir existencias manualmente, pulsa <strong>Rellenar hasta objetivo</strong>: completa lo que falta y conserva las ventas. Si ya tienes más que el objetivo, no se quita stock.</p><p>Con las cantidades originales puedes preparar <strong>100 lattes de coco</strong>, o <strong>150 margaritas Don Juan</strong>, o <strong>200 americanos</strong>. Son ejemplos alternativos: las bebidas comparten ingredientes y estas cifras no se suman.</p></div></details>
+          <details class="manual-step"><summary><span>03</span> Distinguir las marcas y los ingredientes compartidos</summary><div><p>Una Margarita Don Juan consume <strong>50 ml de Don Juan, 30 ml de lima y 20 ml de licor de naranja</strong>. Don Pepe conserva sus existencias.</p><p>En cambio, la leche de coco se comparte entre lattes, matcha y cócteles. Al consumirla en una bebida, también se actualizan las demás. Si falta un ingrediente, se desactiva la venta de todas las recetas que lo necesiten.</p></div></details>
+          <details class="manual-step"><summary><span>04</span> Probar la reposición</summary><div><p><strong>Abastecimiento</strong> muestra inicialmente 19 botellas de lager, 3 de IPA, 12 de negra y 6 sin alcohol: <strong>40 botellas</strong>. Cada venta suma lo necesario para recuperar el objetivo, sin esperar al mínimo. Por ejemplo, vender una sin alcohol aumenta su pedido a 7 y el total a 41. Los mínimos solo marcan urgencia.</p><p>Ejemplo: después de <strong>90 lattes de coco</strong>, quedan <strong>1.200 ml de coco</strong>. La sugerencia será pedir <strong>11 envases de 1 litro</strong> para volver al objetivo de 12 litros o superarlo con envases completos.</p><p>Si vendes <strong>135 margaritas Don Juan</strong>, quedan <strong>750 ml de ese tequila</strong> y se sugieren <strong>9 botellas de 750 ml</strong>.</p></div></details>
+          <details class="manual-step"><summary><span>05</span> Revisar y cerrar el pedido</summary><div><p>Abre <strong>Abastecimiento</strong> y pulsa <strong>Revisar y cerrar pedido</strong>. Revisa productos y cantidades, escribe <code>BARRA-DEMO</code> y confirma la solicitud simulada. No uses tu contraseña real.</p><p><strong>My Autopilot</strong> controla ingredientes autorizados, límites, caducidad y pausa. Las reglas se comprueban al confirmar. El registro es local: todavía no se envía nada a MPP ni Stripe y no se realiza ningún cargo.</p></div></details>
+          <details class="manual-step"><summary><span>06</span> Guardar y volver a empezar</summary><div><p>Las existencias, ventas, rellenos y objetivos se conservan al recargar mediante <strong>almacenamiento local del navegador</strong>. No hay servidor ni sincronización entre dispositivos. Borrar los datos del sitio elimina estos datos.</p><p><strong>Reiniciar demo</strong>, en Ingredientes o en el menú, llena el inventario hasta tus objetivos guardados, deja ventas, solicitudes y abastecimiento en cero y limpia el registro. Conserva tus objetivos y las reglas de Autopilot. El inventario lleno y los contadores en cero se mantienen al recargar.</p></div></details>
+        </section>
+      </div>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+    <span class="sr-only" id="sale-announcer" role="status" aria-live="polite" aria-atomic="true"></span>
+    <dialog class="copy-dialog" id="copy-dialog" aria-labelledby="copy-dialog-title">
+      <div class="dialog-heading"><h2 id="copy-dialog-title">Tu próxima reposición</h2><button class="icon-button" type="button" id="close-copy-dialog" aria-label="Cerrar"><span data-icon="close"></span></button></div>
+      <p>Selecciona y copia estos datos para continuar.</p>
+      <textarea id="order-json" readonly aria-label="Datos de reposición en formato JSON"></textarea>
+      <button class="button button-dark" type="button" id="select-order">Seleccionar datos</button>
+    </dialog>
+
+    <dialog class="order-dialog" id="order-dialog" aria-labelledby="order-dialog-title">
+      <div class="dialog-heading"><span class="ops-chip" id="order-step">Paso 1 de 2 · Cajero de cierre</span><button type="button" class="icon-button" id="dismiss-order" aria-label="Cerrar confirmación"><span data-icon="close"></span></button></div>
+      <div id="order-review"><h2 id="order-dialog-title">¿Confirmas el pedido de insumos?</h2><p class="order-intro">Revisa la nota antes de autorizar la solicitud simulada.</p><div id="confirmation-items" class="confirmation-items"></div><div class="approval-note"><span data-icon="shield"></span><p>Una solicitud, una aprobación. Tus reglas se vuelven a comprobar al confirmar.</p></div><form id="authorize-order"><label for="demo-password">Clave de demostración</label><div class="password-field"><input id="demo-password" type="password" placeholder="Escribe la clave de demo" autocomplete="off" required/><button type="button" id="show-demo-password" aria-label="Mostrar clave" aria-pressed="false">Ver</button></div><p class="demo-password-hint">Usa <code>BARRA-DEMO</code>. No uses una contraseña real.</p><p id="authorization-error" class="authorization-error" role="alert"></p><div class="order-dialog-actions"><button type="button" class="button button-quiet" id="back-to-draft">Volver al borrador</button><button type="submit" class="button button-dark" id="confirm-order">Confirmar pedido simulado</button></div></form><p class="ops-local-note">No se enviará ningún pedido ni se realizará un cargo.</p></div>
+      <div id="order-success" hidden><div class="order-success-icon" data-icon="check"></div><h2>Solicitud simulada registrada</h2><p id="order-reference"></p><p class="order-intro">Tu nota queda en Abastecimiento. El inventario se mantiene hasta que exista una recepción de mercancía.</p><div class="ops-connection"><span class="status-dot"></span> MPP / Stripe: pendiente de conexión</div><button type="button" class="button button-dark ops-primary" id="finish-order">Volver a Abastecimiento</button></div>
+    </dialog>
+    <noscript><p class="noscript-message">Activa JavaScript para simular ventas en tu barra.</p></noscript>
+  </body>
+</html>

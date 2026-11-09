@@ -1,0 +1,15 @@
+{
+  "name": "barra-coffee-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Una PoC de ventas e inventario para una barra de café.",
+  "engines": { "node": ">=20.11" },
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "serve": "node scripts/serve.mjs",
+    "start": "node scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test"
+  }
+}

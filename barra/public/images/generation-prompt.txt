@@ -1,0 +1,16 @@
+Use case: product-mockup.
+Asset type: ONE photographic product sprite atlas for a Spanish coffee bar point-of-sale web app. A single landscape image with an EXACT seamless 4-column by 3-row contact sheet of 12 equally sized rectangular tiles; the full canvas aspect ratio must be 4:3 so every tile is square. No gutters, no border lines. Each tile is an individual high-end studio product photograph of ONE beverage against the same solid warm pale beige (#eee9e2) backdrop and surface with a delicate realistic grounding shadow. All drinks fully contained within their own equal tile, centered both horizontally and vertically, with generous uniform breathing room (the vessel occupies approximately 62% of each tile height). All photographed at the SAME gentle elevated three-quarter camera angle. Tasteful Scandinavian specialty coffee editorial photography, natural materials, creamy ceramics, soft directional daylight from upper left. No props except a saucer for short cups. No hands, people, text, lettering, labels, brands, logos or watermarks.
+Exact reading order LEFT TO RIGHT, TOP TO BOTTOM:
+Row 1 column 1: Espresso, small ivory ceramic demitasse on ivory saucer, dark espresso with rich crema.
+Row 1 column 2: Americano, medium ivory straight ceramic mug filled with black coffee.
+Row 1 column 3: Cappuccino, warm terracotta ceramic cup on matching saucer, foamy coffee with delicate rosetta latte art.
+Row 1 column 4: Caffe latte, tall clear ribbed glass filled with pale tan milky coffee and a thin foam layer.
+Row 2 column 1: Flat white, low wide off-white ceramic coffee cup on saucer, silky white heart latte art.
+Row 2 column 2: Mocha, small clear glass mug filled with chocolate coffee, foam with cocoa powder.
+Row 2 column 3: Cold brew, clear straight tall glass of nearly black iced coffee with visible ice cubes.
+Row 2 column 4: Iced latte, clear tall glass with visible ice and beautiful swirls of milk mixing with espresso, pale tan.
+Row 3 column 1: Iced matcha latte, clear glass of vivid natural green matcha layered with white milk and ice.
+Row 3 column 2: Chai latte, sand ceramic mug filled with warm beige chai and a dusting of cinnamon.
+Row 3 column 3: Hot chocolate, deep cocoa-brown ceramic cup filled with glossy dark hot chocolate.
+Row 3 column 4: Fresh orange juice, clear tall glass with vibrant orange juice, a small half orange slice on the rim.
+Crucial: exact 4 by 3 equal grid, each cell contains only its specified drink, all objects fully inside each square cell. Beautiful photorealism.

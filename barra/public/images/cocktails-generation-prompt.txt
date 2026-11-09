@@ -1,0 +1,13 @@
+Use case: product-mockup.
+Asset type: one photographic sprite atlas for a warm minimal café and cocktail inventory simulator.
+Create one landscape image with exact 2:1 aspect ratio, an EXACT seamless 4-column by 2-row contact sheet. Eight equal square cells, no gutters, no lines, no text. Each cell is a different single cocktail product photograph, fully contained and centered within its own square. Every vessel occupies about 64% of the cell height with generous breathing room. Same warm pale beige tabletop and background (#eee9e2), same gentle elevated three-quarter camera angle, soft daylight from upper left, refined Scandinavian editorial beverage photography. Keep each glass visibly separated from cell boundaries. No bottles, hands, people, brands, labels, lettering or watermarks.
+Exact order:
+Top row column 1: classic pale lime margarita in a short coupe glass, salted rim, small lime wedge.
+Top row column 2: pale golden margarita in a short rounded stemmed margarita glass, salted rim, lime wheel.
+Top row column 3: pink grapefruit paloma with visible ice in a short elegant highball, grapefruit wedge.
+Top row column 4: paler pink grapefruit paloma in a clear ribbed tall highball glass with ice, lime wheel.
+Bottom row column 1: opaque white coconut tequila cocktail with ice in a rounded short rocks glass, small lime wedge.
+Bottom row column 2: creamy white coconut tequila cocktail in a tall straight glass with ice, a subtle lime wheel.
+Bottom row column 3: tequila sunrise in a tall clear highball with a red-to-orange gradient, ice and small orange wedge.
+Bottom row column 4: creamy coconut sunrise, a clear tall glass with a coral-red lower layer, orange middle layer and white coconut top layer, ice, small orange wheel.
+Crucial: exact four columns and two rows, all eight cells square, all beverages centered and fully inside their own cell. Consistent photographic lighting and backdrop, realistic glass and ice.
