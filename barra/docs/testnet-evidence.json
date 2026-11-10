@@ -1,0 +1,21 @@
+{
+  "testedAt": "2026-11-10T14:08:47.569Z",
+  "unpaidStatus": 402,
+  "blockedStatus": 403,
+  "paidStatus": 200,
+  "repeatedStatus": 200,
+  "cachedWithoutNewPayment": true,
+  "chainId": 42431,
+  "fee": "0.01 pathUSD TESTNET",
+  "receipt": {
+    "method": "tempo",
+    "reference": "0xf81722a848384a0487b3c95a54c803608896b94c89d43fdb3d985d03f5e9b51e",
+    "status": "success",
+    "timestamp": "2026-11-10T14:08:47.373Z"
+  },
+  "onchainStatus": "success",
+  "blockNumber": "43508718",
+  "totalCents": 5520,
+  "inventoryUnchanged": true,
+  "realPaymentsEnabled": false
+}

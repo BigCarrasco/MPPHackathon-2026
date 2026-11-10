@@ -1,13 +1,40 @@
-# barra. — Cada taza cuenta
+# barra. — Restocking & paid supplier quotes
 
-Una PoC compacta con 31 cafés, cócteles y cervezas, venta con un clic, inventario compartido de ingredientes y reposición por envases.
+A JavaScript dashboard and Node.js API for inventory planning. An agent pays **0.01 test pathUSD** for a simulated supplier quote using MPP on **Tempo Testnet (Moderato, 42431)**. No inventory is purchased.
 
-El proyecto está en [`barra/`](./barra). Necesitas Node.js 20.11 o posterior. No hay dependencias que instalar.
+## Run
+
+Node.js 22 or later. From the repository root:
 
 ```sh
-npm run serve
+npm ci
+npm run setup:testnet
+npm run dev
 ```
 
-Abre **http://localhost:5173**. Consulta [`barra/README.md`](./barra/README.md) para la estructura y el punto de integración con un backend.
+Open http://localhost:5173 and select **Generate quote**. If the port is in use, run `PORT=5186 npm run dev` and open http://localhost:5186.
 
-Los comandos `npm run serve`, `npm run dev`, `npm start`, `npm test` y `npm run build` funcionan tanto desde la raíz como desde `barra/`. Si el puerto 5173 está ocupado, ejecuta `PORT=5174 npm run serve` y abre http://localhost:5174. Mantén la terminal abierta mientras usas la demo.
+## Verify
+
+```sh
+npm test                 # offline tests
+npm run demo:testnet     # complete HTTP + Testnet payment check
+npm run build            # static dashboard; paid quotes still need Node
+```
+
+The initial inventory needs 40 bottles across four products, estimated at **€55.20**. The quote fee is displayed separately. A repeated request uses the saved result without another payment.
+
+## Architecture
+
+- Browser: inventory simulation, rules and dashboard.
+- Node.js: spending checks and quote orchestration at `POST /api/budget`.
+- Supplier API: `GET /api/supplier/quote`, protected by MPP.
+- Tempo Testnet: confirmed test transfer and `Payment-Receipt`.
+
+The UI uses English copy, larger text and collapsible secondary details for presentations.
+
+[Demo and presentation guide](barra/docs/MPP-MVP.md) · [Debug one request](barra/docs/DEBUGGING.md) · [Public deployment and submission](barra/docs/DEPLOYMENT.md) · [Project structure](barra/README.md) · [Recorded Testnet evidence](barra/docs/testnet-evidence.json)
+
+[Azure F1 configuration for a trial without credits](barra/docs/AZURE.md).
+
+Keys are stored only in `barra/.env`. Payment records and replay protection are in `barra/.data/`. Both are ignored by Git. Run one Node process per data directory. Inventory and prices are simulated; real payments are disabled. Public hosting requires a demo access code and a persistent data directory. A Dockerfile is included; a live deployment is still pending.

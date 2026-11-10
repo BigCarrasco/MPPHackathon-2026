@@ -1,0 +1,5 @@
+node_modules/
+barra/.env
+barra/.data/
+barra/dist/
+*.log

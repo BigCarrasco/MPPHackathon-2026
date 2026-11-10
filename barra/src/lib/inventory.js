@@ -56,7 +56,7 @@ export function getAvailableServings(state, product) {
 export function getRecipe(product) {
   return Object.entries(product.recipe).map(([id, quantity]) => {
     const ingredient = ingredients.find((item) => item.id === id);
-    return { productId: id, product: ingredient.name, shortName: ingredient.shortName, quantity, unit: ingredient.unit === "botellas" && quantity === 1 ? "botella" : ingredient.unit };
+    return { productId: id, product: ingredient.name, shortName: ingredient.shortName, quantity, unit: ingredient.unit === "bottles" && quantity === 1 ? "bottle" : ingredient.unit };
   });
 }
 
@@ -106,3 +106,4 @@ export function getReplenishmentTotals(items) {
     units: items.reduce((total, item) => total + item.quantity, 0),
   };
 }
+

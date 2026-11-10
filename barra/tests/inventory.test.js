@@ -51,7 +51,7 @@ test("la reposición acumula el consumo y redondea los envases de coco", () => {
   assert.equal(next.inventory["coconut-milk"], 1200);
   assert.equal(next.inventory.coffee, 1980);
   assert.deepEqual(getReplenishment(next).find(({ productId }) => productId === "coconut-milk"),
-    { productId: "coconut-milk", product: "Leche de coco", quantity: 11, unit: "envases" });
+    { productId: "coconut-milk", product: "Coconut milk", quantity: 11, unit: "cartons" });
 });
 
 test("un ingrediente compartido actualiza otras bebidas sin sumarles ventas", () => {
@@ -81,7 +81,7 @@ test("las capacidades descritas en el manual coinciden con las recetas", () => {
   const next = sellMany(state, "margarita-juan", 135);
   assert.equal(next.inventory["tequila-don-juan"], 750);
   assert.deepEqual(getReplenishment(next).find(({ productId }) => productId === "tequila-don-juan"),
-    { productId: "tequila-don-juan", product: "Tequila Don Juan", quantity: 9, unit: "botellas" });
+    { productId: "tequila-don-juan", product: "Don Juan tequila", quantity: 9, unit: "bottles" });
 });
 
 test("las ventas repetidas no producen existencias negativas y limitan el historial", () => {
@@ -96,13 +96,13 @@ test("la compra redondea a envases completos y conserva las unidades", () => {
   const next = sellMany(createInitialState(), "americano", 180);
   assert.equal(next.inventory.coffee, 360);
   assert.deepEqual(getReplenishment(next).find(({ productId }) => productId === "coffee"),
-    { productId: "coffee", product: "Café molido", quantity: 13, unit: "bolsas" });
+    { productId: "coffee", product: "Ground coffee", quantity: 13, unit: "bags" });
 });
 
 test("las recetas exponen cantidades y unidades para una API", () => {
   assert.deepEqual(getRecipe(product("coconut-latte")), [
-    { productId: "coffee", product: "Café molido", shortName: "Café", quantity: 18, unit: "g" },
-    { productId: "coconut-milk", product: "Leche de coco", shortName: "Leche de coco", quantity: 120, unit: "ml" },
+    { productId: "coffee", product: "Ground coffee", shortName: "Coffee", quantity: 18, unit: "g" },
+    { productId: "coconut-milk", product: "Coconut milk", shortName: "Coconut milk", quantity: 120, unit: "ml" },
   ]);
 });
 
@@ -119,18 +119,18 @@ test("reiniciar llena el inventario y deja ventas y abastecimiento a cero", () =
   const next = sellProduct(reset, "coconut-latte");
   assert.equal(next.sold["coconut-latte"], 1);
   assert.deepEqual(getReplenishment(next), [
-    { productId: "coconut-milk", product: "Leche de coco", quantity: 1, unit: "envase" },
-    { productId: "coffee", product: "Café molido", quantity: 1, unit: "bolsa" },
+    { productId: "coconut-milk", product: "Coconut milk", quantity: 1, unit: "carton" },
+    { productId: "coffee", product: "Ground coffee", quantity: 1, unit: "bag" },
   ]);
 });
 
 test("el abastecimiento incluye todas las cervezas y coloca primero las urgentes", () => {
   const state = createInitialState();
   assert.deepEqual(getReplenishment(state).filter(({ productId }) => productId.startsWith("beer-")), [
-    { productId: "beer-lager", product: "Cerveza lager", quantity: 19, unit: "botellas" },
-    { productId: "beer-ipa", product: "Cerveza IPA", quantity: 3, unit: "botellas" },
-    { productId: "beer-stout", product: "Cerveza negra", quantity: 12, unit: "botellas" },
-    { productId: "beer-zero", product: "Cerveza sin alcohol", quantity: 6, unit: "botellas" },
+    { productId: "beer-lager", product: "Lager beer", quantity: 19, unit: "bottles" },
+    { productId: "beer-ipa", product: "IPA beer", quantity: 3, unit: "bottles" },
+    { productId: "beer-stout", product: "Stout beer", quantity: 12, unit: "bottles" },
+    { productId: "beer-zero", product: "Alcohol-free beer", quantity: 6, unit: "bottles" },
   ]);
   const sold = sellProduct(state, "lager");
   assert.equal(sold.inventory["beer-lager"], 4);
@@ -212,3 +212,4 @@ test("reiniciar llena hasta un objetivo personalizado aunque sea menor que el st
   assert.equal(getSummary(reset).sold, 0);
   assert.equal(refillIngredient(reset, "coffee").inventory.coffee, 1000);
 });
+

@@ -1,0 +1,45 @@
+{
+  "requestId": "00000000-0000-4000-8000-000000000001",
+  "state": {
+    "inventory": {
+      "tequila-don-juan": 7500,
+      "tequila-don-pepe": 7500,
+      "coconut-milk": 12000,
+      "lime-juice": 6000,
+      "orange-liqueur": 3500,
+      "grapefruit-juice": 12000,
+      "orange-juice": 12000,
+      "grenadine": 2000,
+      "coffee": 3600,
+      "matcha": 400,
+      "beer-lager": 5,
+      "beer-ipa": 9,
+      "beer-stout": 12,
+      "beer-zero": 18
+    },
+    "targets": {}
+  },
+  "policy": {
+    "paused": false,
+    "mode": "propose",
+    "maxPackages": 50,
+    "maxDailyOrders": 5,
+    "expiresMinutes": 15,
+    "allowedIngredients": [
+      "tequila-don-juan",
+      "tequila-don-pepe",
+      "coconut-milk",
+      "lime-juice",
+      "orange-liqueur",
+      "grapefruit-juice",
+      "orange-juice",
+      "grenadine",
+      "coffee",
+      "matcha",
+      "beer-lager",
+      "beer-ipa",
+      "beer-stout",
+      "beer-zero"
+    ]
+  }
+}

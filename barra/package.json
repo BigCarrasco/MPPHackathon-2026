@@ -3,13 +3,22 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Una PoC de ventas e inventario para una barra de café.",
-  "engines": { "node": ">=20.11" },
+  "description": "Inventory planning and paid supplier quotes on Tempo Testnet.",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "serve": "node scripts/serve.mjs",
     "start": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",
-    "test": "node --test"
+    "test": "node --test",
+    "setup:testnet": "node scripts/setup-testnet.mjs",
+    "demo:testnet": "node scripts/demo-testnet.mjs",
+    "debug": "node --inspect scripts/serve.mjs"
+  },
+  "dependencies": {
+    "mppx": "0.18.0",
+    "viem": "2.57.1"
   }
 }

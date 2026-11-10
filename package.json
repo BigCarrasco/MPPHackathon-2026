@@ -6,6 +6,15 @@
     "serve": "npm --prefix barra run serve",
     "start": "npm --prefix barra start",
     "build": "npm --prefix barra run build",
-    "test": "npm --prefix barra test"
+    "test": "npm --prefix barra test",
+    "setup:testnet": "npm --prefix barra run setup:testnet",
+    "demo:testnet": "npm --prefix barra run demo:testnet",
+    "debug": "npm --prefix barra run debug"
+  },
+  "workspaces": [
+    "barra"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
   }
 }
