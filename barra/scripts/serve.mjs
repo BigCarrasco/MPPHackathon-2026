@@ -14,7 +14,8 @@ const mimeTypes = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; char
 
 export async function createBarraServer(options = {}) {
   const config = options.config ?? readConfig();
-  const store = options.store ?? await openStore(resolve(root, '.data/testnet.json'));
+  const dataDirectory = process.env.BARRA_DATA_DIR || resolve(root, '.data');
+  const store = options.store ?? await openStore(resolve(dataDirectory, 'testnet.json'));
   const payments = options.payments ?? createPayments(config, store);
   const api = createApi({ config, store, payments, logger: options.logger, fetchImpl: options.fetchImpl, supplierOrigin: () => `http://127.0.0.1:${server.address().port}` });
   const server = createServer(async (incoming, outgoing) => {

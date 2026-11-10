@@ -35,4 +35,6 @@ The UI uses English copy, larger text and collapsible secondary details for pres
 
 [Demo and presentation guide](barra/docs/MPP-MVP.md) · [Debug one request](barra/docs/DEBUGGING.md) · [Public deployment and submission](barra/docs/DEPLOYMENT.md) · [Project structure](barra/README.md) · [Recorded Testnet evidence](barra/docs/testnet-evidence.json)
 
+[Azure F1 configuration for a trial without credits](barra/docs/AZURE.md).
+
 Keys are stored only in `barra/.env`. Payment records and replay protection are in `barra/.data/`. Both are ignored by Git. Run one Node process per data directory. Inventory and prices are simulated; real payments are disabled. Public hosting requires a demo access code and a persistent data directory. A Dockerfile is included; a live deployment is still pending.
