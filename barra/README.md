@@ -4,7 +4,7 @@ Simulador de reabastecimiento de un bar. El flujo principal es **inventario → 
 
 ## Ejecutar
 
-Necesitas Node.js 20.11 o posterior. No hay dependencias que instalar.
+Necesitas Node.js 22 o posterior. Ejecuta `npm ci` desde la raíz del repositorio y `npm run setup:testnet` para preparar el faucet.
 
 ```sh
 npm run dev
@@ -12,7 +12,7 @@ npm test
 npm run build
 ```
 
-Abre http://localhost:5173. El build genera `dist/` para cualquier servidor estático. No abras `index.html` como `file://`: los módulos necesitan HTTP.
+Abre http://localhost:5173. El build genera el dashboard en `dist/`; las cotizaciones MPP necesitan el servidor Node. No abras `index.html` como `file://`: los módulos necesitan HTTP.
 
 ## Abastecimiento automático
 
@@ -57,7 +57,7 @@ Los controles funcionan dentro de la simulación:
 
 Las reglas se vuelven a evaluar al confirmar el borrador. Una misma referencia no puede registrarse dos veces. Si conservas reglas de una versión previa, autoriza los nuevos ingredientes y ajusta el límite desde esta vista: no se amplían permisos guardados silenciosamente.
 
-**Son controles de UX en el navegador.** La autorización real, identidad, secretos, permisos, cotizaciones y ejecución mediante MPP / Stripe siguen pendientes. No se han configurado credenciales ni conexiones. El proveedor de prueba no es un comercio conectado; sin precios, no se inventan importes ni se aplica un límite monetario ficticio.
+**Los pedidos siguen siendo una simulación local.** El botón **Generar presupuesto** añade una ruta independiente: el backend Node valida las reglas enviadas y aplica límites propios antes de pagar 0,01 pathUSD de prueba mediante MPP/Tempo Moderato. El proveedor devuelve precios simulados y recibo; nunca compra inventario. [Guía de arquitectura, pruebas, depuración y defensa](docs/MPP-MVP.md).
 
 ## Persistencia
 
@@ -91,3 +91,4 @@ tests/                       Inventario, persistencia y reglas
 El evento `barra:sale` conserva producto vendido, cantidades consumidas, inventario y reposición. `getReplenishment(state)` devuelve el pedido con `productId`, `product`, `quantity` y `unit`. Las reglas están en funciones puras para poder trasladar su validación a un backend.
 
 Las fotografías son ilustrativas y están guardadas localmente. Las marcas y cantidades pertenecen a las recetas de la demo. Consulta [public/images/README.md](./public/images/README.md) para los recursos generados con ImageGen y los prompts.
+

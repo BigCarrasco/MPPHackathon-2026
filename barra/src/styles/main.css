@@ -1645,3 +1645,17 @@ body[data-view="autopilot"] .sidebar { display: none; }
 .ingredient-refill { width: 100%; margin-top: 10px; background: transparent; }
 .ingredient-refill:disabled { opacity: .45; cursor: default; }
 .ingredient-target-controls :focus-visible, .ingredient-refill:focus-visible { outline: 2px solid #b8ce9c; outline-offset: 3px; }
+
+/* Cotización MPP: mantiene las tarjetas y navegación del dashboard. */
+.budget-card { margin-top: 24px; }
+.budget-heading { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.budget-card p { line-height: 1.6; }
+.budget-card code { overflow-wrap: anywhere; }
+.budget-card details { margin: 16px 0; }
+.budget-card summary { cursor: pointer; font-weight: 600; }
+.budget-card li { margin: 8px 0; }
+.budget-table-wrap { overflow-x: auto; margin-top: 16px; }
+.budget-table { width: 100%; border-collapse: collapse; }
+.budget-table th, .budget-table td { padding: 12px 8px; border-bottom: 1px solid #e5e0d8; text-align: right; white-space: nowrap; }
+.budget-table th:first-child, .budget-table td:first-child { text-align: left; white-space: normal; }
+.budget-card a { text-decoration: underline; }

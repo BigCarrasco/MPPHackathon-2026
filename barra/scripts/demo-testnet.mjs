@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { resolve } from 'node:path';
+import { getTransactionReceipt } from 'viem/actions';
+import { createBarraServer } from './serve.mjs';
+import { readConfig, testnetClient } from '../server/config.mjs';
+import { createInitialState } from '../src/lib/inventory.js';
+import { ingredients } from '../src/data/ingredients.js';
+import { defaultPolicy } from '../src/lib/order-policy.js';
+
+process.loadEnvFile(resolve(import.meta.dirname, '../.env'));
+const server = await createBarraServer({ config: readConfig() });
+await new Promise((done) => server.listen(0, '127.0.0.1', done));
+const origin = `http://127.0.0.1:${server.address().port}`;
+try {
+  const unpaid = await fetch(`${origin}/api/supplier/quote`);
+  assert.equal(unpaid.status, 402);
+  assert.match(unpaid.headers.get('WWW-Authenticate'), /^Payment /);
+  const state = createInitialState();
+  const original = structuredClone(state);
+  const policy = { ...defaultPolicy, allowedIngredients: ingredients.map(({ id }) => id) };
+  const payload = { requestId: randomUUID(), state, policy };
+  const send = (body) => fetch(`${origin}/api/budget`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const blocked = await send({ ...payload, requestId: randomUUID(), policy: { ...policy, paused: true } });
+  assert.equal(blocked.status, 403);
+  const paid = await send(payload);
+  const result = await paid.json();
+  assert.equal(paid.status, 200, JSON.stringify(result));
+  assert.equal(result.payment.chainId, 42431);
+  assert.equal(result.payment.feeMicros, 10_000);
+  assert.equal(result.quote.totalCents, 5520);
+  assert.equal(result.quote.inventoryPurchased, false);
+  assert.equal(result.quote.lines.length, 4);
+  assert.deepEqual(state, original);
+  const onchain = await getTransactionReceipt(testnetClient(), { hash: result.payment.receipt.reference });
+  assert.equal(onchain.status, 'success');
+  const repeated = await send(payload);
+  const cached = await repeated.json();
+  assert.equal(repeated.status, 200);
+  assert.equal(cached.cached, true);
+  assert.equal(cached.payment.receipt.reference, result.payment.receipt.reference);
+  console.log(JSON.stringify({ testedAt: new Date().toISOString(), unpaidStatus: unpaid.status, blockedStatus: blocked.status, paidStatus: paid.status, repeatedStatus: repeated.status, cachedWithoutNewPayment: cached.cached, chainId: 42431, fee: '0.01 pathUSD TESTNET', receipt: result.payment.receipt, onchainStatus: onchain.status, blockNumber: String(onchain.blockNumber), totalCents: result.quote.totalCents, inventoryUnchanged: true, trace: result.trace }, null, 2));
+} finally { await new Promise((done) => server.close(done)); }

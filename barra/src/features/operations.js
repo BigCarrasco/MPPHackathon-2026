@@ -3,6 +3,7 @@ import { ingredients } from "../data/ingredients.js";
 import { getIngredientConsumption, getReplenishment, getReplenishmentTotals, getTargetStock } from "../lib/inventory.js";
 import { defaultPolicy, DEMO_KEY, getOrderBlock, localDay } from "../lib/order-policy.js";
 import { icon } from "../lib/icons.js";
+import { initBudget } from "./budget.js";
 
 const $ = (selector) => document.querySelector(selector);
 const escape = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -35,6 +36,7 @@ export function initOperations({ getState, onNotice }) {
   let dayTab = "sales";
   let draft = null;
   let submitted = false;
+  const budget = initBudget({ getState, getPolicy: () => ({ ...policy }), onNotice, log });
 
   function persist() {
     try { localStorage.setItem(storageKey, JSON.stringify({ policy, orders, audit })); }
@@ -66,6 +68,7 @@ export function initOperations({ getState, onNotice }) {
     $("#audit-entries").innerHTML = audit.length ? audit.map((entry) => `<div class="audit-entry"><span class="status-dot"></span><p>${escape(entry.message)}</p><time>${time(entry.at)}</time></div>`).join("") : '<div class="ops-empty">Aquí aparecerán los cambios de reglas y las solicitudes de prueba.</div>';
   }
   function render() {
+    budget.update();
     const state = getState();
     const items = getItems();
     const totals = getReplenishmentTotals(items);
@@ -182,6 +185,7 @@ export function initOperations({ getState, onNotice }) {
   dialog.addEventListener("cancel", clearPassword);
   return {
     render,
-    reset() { orders = []; audit = []; draft = null; dismiss(); persist(); render(); },
+    reset() { orders = []; audit = []; draft = null; budget.reset(); dismiss(); persist(); render(); },
   };
 }
+

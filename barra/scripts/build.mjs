@@ -4,4 +4,5 @@ await mkdir("dist", { recursive: true });
 await cp("index.html", "dist/index.html");
 await cp("src", "dist/src", { recursive: true });
 await cp("public", "dist", { recursive: true });
-console.log("✓ Barra lista en dist/. Sin dependencias ni compilación adicional.");
+console.log("✓ Dashboard estático en dist/. Las cotizaciones MPP necesitan el servidor Node (npm run dev).");
+
