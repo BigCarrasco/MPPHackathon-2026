@@ -45,7 +45,7 @@ export async function createBarraServer(options = {}) {
       outgoing.end(incoming.method === 'HEAD' ? undefined : await readFile(file));
     } catch {
       if (!outgoing.headersSent) outgoing.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      outgoing.end('No encontrado');
+      outgoing.end('Not found');
     }
   });
   server.requestTimeout = 60_000;
@@ -57,10 +57,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   if (!process.env.MPP_SECRET_KEY && !process.env.MPP_RECIPIENT) {
     process.env.MPP_SECRET_KEY = randomBytes(32).toString('hex');
     process.env.MPP_RECIPIENT = privateKeyToAccount(generatePrivateKey()).address;
-    console.log('Dashboard disponible. Para pagar consultas de prueba ejecuta npm run setup:testnet y reinicia.');
+    console.log('Dashboard ready. Run npm run setup:testnet and restart to enable test payments.');
   }
   const server = await createBarraServer();
   const port = Number(process.env.PORT || 5173);
-  server.listen(port, '127.0.0.1', () => console.log(`Barra · http://localhost:${server.address().port} · SOLO Tempo Testnet 42431`));
+  const host = process.env.HOST || '127.0.0.1';
+  if (!['127.0.0.1', 'localhost', '::1'].includes(host) && !process.env.DEMO_ACCESS_CODE) throw new Error('Set DEMO_ACCESS_CODE before exposing the demo payer publicly.');
+  server.listen(port, host, () => console.log(`Barra · http://localhost:${server.address().port} · Tempo Testnet 42431 only`));
 }
 

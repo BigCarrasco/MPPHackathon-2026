@@ -1,29 +1,38 @@
-# barra. — Cada taza cuenta
+# barra. — Restocking & paid supplier quotes
 
-Una PoC compacta con 31 cafés, cócteles y cervezas, venta con un clic, inventario compartido de ingredientes y reposición por envases.
+A JavaScript dashboard and Node.js API for inventory planning. An agent pays **0.01 test pathUSD** for a simulated supplier quote using MPP on **Tempo Testnet (Moderato, 42431)**. No inventory is purchased.
 
-El proyecto está en [`barra/`](./barra). Necesitas Node.js 22 o posterior. Desde la raíz instala las dependencias con `npm ci`.
+## Run
+
+Node.js 22 or later. From the repository root:
 
 ```sh
 npm ci
-npm run setup:testnet   # cuenta desechable + fondos ficticios del faucet
-npm run serve
+npm run setup:testnet
+npm run dev
 ```
 
-Abre **http://localhost:5173**. Consulta [`barra/README.md`](./barra/README.md) para la estructura y el punto de integración con un backend.
+Open http://localhost:5173 and select **Generate quote**. If the port is in use, run `PORT=5186 npm run dev` and open http://localhost:5186.
 
-Los comandos `npm run serve`, `npm run dev`, `npm start`, `npm test` y `npm run build` funcionan tanto desde la raíz como desde `barra/`. Si el puerto 5173 está ocupado, ejecuta `PORT=5174 npm run serve` y abre http://localhost:5174. Mantén la terminal abierta mientras usas la demo.
-
-
-## Cotizaciones MPP / Tempo Testnet
-
-En **Abastecimiento → Generar presupuesto**, el backend calcula los faltantes, recibe HTTP 402 del proveedor, valida la política de gasto, firma un micropago de **0,01 pathUSD ficticios** y recibe precios simulados con `Payment-Receipt`. El inventario inicial propone 40 botellas por **55,20 €**. El coste de consulta se muestra aparte, sin convertirlo a euros. No se compran bebidas ni se crean pedidos.
+## Verify
 
 ```sh
-npm test                 # pruebas sin red ni fondos
-npm run demo:testnet     # HTTP 402 → pago Testnet → cotización; requiere setup previo
+npm test                 # offline tests
+npm run demo:testnet     # complete HTTP + Testnet payment check
+npm run build            # static dashboard; paid quotes still need Node
 ```
 
-[Guía para aprender, probar, depurar y defender el proyecto](./barra/docs/MPP-MVP.md).
+The initial inventory needs 40 bottles across four products, estimated at **€55.20**. The quote fee is displayed separately. A repeated request uses the saved result without another payment.
 
-La integración fija Moderato **42431**, pathUSD y el RPC oficial. No existe modo de pagos reales. Las claves quedan en `barra/.env`; recibos, reservas y protección contra reuso en `barra/.data/`, ambos excluidos de Git. La demo escucha solo en localhost y usa un proceso Node. `npm run build` exporta el dashboard; las cotizaciones requieren el backend Node.
+## Architecture
+
+- Browser: inventory simulation, rules and dashboard.
+- Node.js: spending checks and quote orchestration at `POST /api/budget`.
+- Supplier API: `GET /api/supplier/quote`, protected by MPP.
+- Tempo Testnet: confirmed test transfer and `Payment-Receipt`.
+
+The UI uses English copy, larger text and collapsible secondary details for presentations.
+
+[Demo and presentation guide](barra/docs/MPP-MVP.md) · [Debug one request](barra/docs/DEBUGGING.md) · [Public deployment and submission](barra/docs/DEPLOYMENT.md) · [Project structure](barra/README.md) · [Recorded Testnet evidence](barra/docs/testnet-evidence.json)
+
+Keys are stored only in `barra/.env`. Payment records and replay protection are in `barra/.data/`. Both are ignored by Git. Run one Node process per data directory. Inventory and prices are simulated; real payments are disabled. Public hosting requires a demo access code and a persistent data directory. A Dockerfile is included; a live deployment is still pending.

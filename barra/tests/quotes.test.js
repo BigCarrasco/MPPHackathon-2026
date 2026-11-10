@@ -31,11 +31,11 @@ test('calcula 40 envases y 55,20 EUR sin mutar inventario', () => {
 });
 
 test('rechaza mainnet, RPC configurable y pagos no autorizados antes de firmar', () => {
-  for (const key of ['TEMPO_CHAIN_ID', 'TEMPO_RPC_URL', 'MPP_CURRENCY', 'MPP_TESTNET']) assert.throws(() => readConfig({ [key]: '4217' }), /solo Tempo Testnet/);
+  for (const key of ['TEMPO_CHAIN_ID', 'TEMPO_RPC_URL', 'MPP_CURRENCY', 'MPP_TESTNET']) assert.throws(() => readConfig({ [key]: '4217' }), /Tempo Testnet only/);
   assert.throws(() => testnetResolver({ chain: { id: 42431 } })({ chainId: 4217 }));
   assert.equal(checkChallenge(challenge, config, 0, scopeFor(items)), 10000);
   for (const patch of [{ amount: '10001' }, { recipient: '0x2222222222222222222222222222222222222222' }, { currency: 'usd' }, { methodDetails: { chainId: 4217 } }, { splits: [{}] }]) assert.throws(() => checkChallenge({ ...challenge, request: { ...request, ...patch } }, config, 0, scopeFor(items)));
-  assert.throws(() => checkChallenge(challenge, config, 10001, scopeFor(items)), /gasto/);
+  assert.throws(() => checkChallenge(challenge, config, 10001, scopeFor(items)), /spending/);
   assert.throws(() => checkChallenge(challenge, config, 0, 'different-cart'));
 });
 
@@ -55,7 +55,7 @@ test('registro durable conserva reservas tras reinicio y no reinicia datos corru
   await assert.rejects(openStore(file));
 });
 
-async function fixture({ failRetry = false } = {}) {
+async function fixture({ failRetry = false, demoAccessCode = '' } = {}) {
   const store = Store.memory();
   const server = createPayments(config, store).server;
   let signed = 0;
@@ -64,7 +64,7 @@ async function fixture({ failRetry = false } = {}) {
     return { challenge, createCredential: async () => { signed++; return Credential.serialize({ challenge, payload: { type: 'hash', hash: '0x' + '1'.repeat(64) } }); }, setCredential: () => ({ headers: { Authorization: 'test-fixture' } }) };
   } };
   let calls = 0;
-  const api = createApi({ config, store, payments: { server, client }, supplierOrigin: () => 'http://localhost', logger: () => {}, fetchImpl: async (url, init) => {
+  const api = createApi({ config: { ...config, demoAccessCode }, store, payments: { server, client }, supplierOrigin: () => 'http://localhost', logger: () => {}, fetchImpl: async (url, init) => {
     calls++;
     if (!init.headers) return api(new Request(url));
     if (failRetry) throw new Error('lost connection after sending credential');
@@ -118,4 +118,19 @@ test('pausa e inventario completo no pagan; un origen ajeno se rechaza', async (
   const cross = await api(new Request('http://localhost/api/budget', { method: 'POST', headers: { Origin: 'https://evil.example', 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }));
   assert.equal(cross.status, 403);
   assert.deepEqual(counts(), { calls: 0, signed: 0 });
+});
+
+test('public demo payer requires a code; supplier discovery remains public', async () => {
+  const code = 'test-evaluator-code';
+  const { api, send, payload, counts } = await fixture({ demoAccessCode: code });
+  assert.equal((await send()).status, 401);
+  assert.deepEqual(counts(), { calls: 0, signed: 0 });
+  const health = await api(new Request('http://localhost/api/health'));
+  const healthData = await health.json();
+  assert.equal(healthData.demoAccessRequired, true);
+  assert.equal(JSON.stringify(healthData).includes(code), false);
+  assert.equal((await api(new Request('http://localhost/api/supplier/quote'))).status, 402);
+  const allowed = await api(new Request('http://localhost/api/budget', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${code}` }, body: JSON.stringify(payload) }));
+  assert.equal(allowed.status, 200);
+  assert.equal(counts().signed, 1);
 });

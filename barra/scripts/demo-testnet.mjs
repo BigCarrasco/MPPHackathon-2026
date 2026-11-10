@@ -9,7 +9,8 @@ import { ingredients } from '../src/data/ingredients.js';
 import { defaultPolicy } from '../src/lib/order-policy.js';
 
 process.loadEnvFile(resolve(import.meta.dirname, '../.env'));
-const server = await createBarraServer({ config: readConfig() });
+const config = readConfig();
+const server = await createBarraServer({ config });
 await new Promise((done) => server.listen(0, '127.0.0.1', done));
 const origin = `http://127.0.0.1:${server.address().port}`;
 try {
@@ -20,7 +21,7 @@ try {
   const original = structuredClone(state);
   const policy = { ...defaultPolicy, allowedIngredients: ingredients.map(({ id }) => id) };
   const payload = { requestId: randomUUID(), state, policy };
-  const send = (body) => fetch(`${origin}/api/budget`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const send = (body) => fetch(`${origin}/api/budget`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(config.demoAccessCode ? { Authorization: `Bearer ${config.demoAccessCode}` } : {}) }, body: JSON.stringify(body) });
   const blocked = await send({ ...payload, requestId: randomUUID(), policy: { ...policy, paused: true } });
   assert.equal(blocked.status, 403);
   const paid = await send(payload);

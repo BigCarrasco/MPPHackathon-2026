@@ -1,5 +1,6 @@
 import { Credential, Receipt } from 'mppx';
 import { keccak256 } from 'viem';
+import { timingSafeEqual } from 'node:crypto';
 import { createInitialState, getReplenishment } from '../src/lib/inventory.js';
 import { CHAIN_ID, CURRENCY, PRICE, PRICE_MICROS } from './config.mjs';
 import { ApiError, checkChallenge, checkPolicy, fingerprint, itemsFromState, normalizeItems, quote, scopeFor } from './quotes.mjs';
@@ -12,34 +13,34 @@ export function createApi({ config, store, payments, supplierOrigin, fetchImpl =
 
   async function budget(body) {
     const { requestId, state, policy } = body ?? {};
-    if (!/^[a-f0-9-]{36}$/i.test(requestId || '')) throw new ApiError(400, 'requestId debe ser un UUID.');
+    if (!/^[a-f0-9-]{36}$/i.test(requestId || '')) throw new ApiError(400, 'requestId must be a UUID.');
     const items = itemsFromState(state);
     const hash = fingerprint({ items, policy });
     const ledger = await store.get('budget-ledger') ?? {};
     const previous = ledger[requestId];
     if (previous) {
-      if (previous.hash !== hash) throw new ApiError(409, 'Este requestId pertenece a otra propuesta.');
+      if (previous.hash !== hash) throw new ApiError(409, 'This requestId belongs to another proposal.');
       if (previous.status === 'complete') {
-        if (Date.now() >= Date.parse(previous.result.quote.expiresAt)) throw new ApiError(410, 'Cotización caducada. Genera una nueva solicitud.');
+        if (Date.now() >= Date.parse(previous.result.quote.expiresAt)) throw new ApiError(410, 'Quote expired. Generate a new request.');
         return json({ ...previous.result, cached: true });
       }
       throw new ApiError(409, previous.status === 'pending'
-        ? 'Pago pendiente de conciliación. No se repetirá. Revisa el registro y la transacción antes de crear otra solicitud.'
-        : 'La solicitud falló antes del pago. Genera una nueva solicitud.');
+        ? 'Payment needs reconciliation. It will not be repeated. Check the transaction before making another request.'
+        : 'Request failed before payment. Generate a new request.');
     }
     const { day, spentMicros } = checkPolicy(items, policy, config, ledger);
-    if (!items.length) return json({ requestId, quote: quote([]), payment: null, trace: ['Inventario completo: no se consultó ni pagó.'] });
-    if (!payments.client) throw new ApiError(503, 'Falta la cuenta de prueba. Ejecuta npm run setup:testnet.');
+    if (!items.length) return json({ requestId, quote: quote([]), payment: null, trace: ['Stock is at target. No quote or payment needed.'] });
+    if (!payments.client) throw new ApiError(503, 'Test account missing. Run npm run setup:testnet.');
     const trace = [];
     const log = (message) => { trace.push(message); logger(`[budget ${requestId}] ${message}`); };
     const url = new URL('/api/supplier/quote', supplierOrigin());
     url.searchParams.set('items', JSON.stringify(items));
     const unpaid = await fetchImpl(url, { redirect: 'error', signal: AbortSignal.timeout(20_000) });
-    if (unpaid.status !== 402) throw new ApiError(502, 'El proveedor no devolvió el desafío MPP esperado.');
-    log('HTTP 402: el proveedor solicita el micropago.');
+    if (unpaid.status !== 402) throw new ApiError(502, 'Supplier did not return the expected MPP challenge.');
+    log('HTTP 402: supplier requests payment.');
     const payment = await payments.client.preparePayment(unpaid);
     const feeMicros = checkChallenge(payment.challenge, config, spentMicros, scopeFor(items));
-    log('Políticas aprobadas: Testnet, destinatario, moneda y gasto verificados.');
+    log('Policy approved: network, recipient, currency and spending checked.');
     // Reserve before signing; pending outcomes count against daily limits even after restart.
     const entry = { hash, day, status: 'pending', feeMicros, createdAt: Date.now() };
     ledger[requestId] = entry;
@@ -49,15 +50,15 @@ export function createApi({ config, store, payments, supplierOrigin, fetchImpl =
     catch {
       entry.status = 'failed'; entry.feeMicros = 0;
       await store.put('budget-ledger', ledger);
-      throw new ApiError(502, 'No se pudo firmar en Testnet; no se envió el pago. Comprueba el faucet y la conexión RPC.');
+      throw new ApiError(502, 'Testnet signing failed. No payment sent. Check test funds and RPC connection.');
     }
-    log('Credencial firmada para Tempo Testnet; se reintenta la consulta.');
+    log('Testnet credential signed. Retrying the quote request.');
     // A pull-mode transaction hash lets the operator reconcile a lost HTTP response.
     const signed = Credential.deserialize(credential).payload;
     if (signed.type === 'transaction') {
       entry.transactionHash = keccak256(signed.signature);
       await store.put('budget-ledger', ledger);
-      log(`Transacción Testnet: ${entry.transactionHash}`);
+      log(`Testnet transaction: ${entry.transactionHash}`);
     }
     let paid;
     try {
@@ -67,59 +68,64 @@ export function createApi({ config, store, payments, supplierOrigin, fetchImpl =
       if (receipt.method !== 'tempo' || receipt.status !== 'success') throw new Error('Invalid receipt');
       const resultQuote = await paid.json();
       if (resultQuote.simulated !== true || resultQuote.inventoryPurchased !== false || fingerprint(resultQuote.lines.map(({ productId, quantity }) => ({ productId, quantity }))) !== fingerprint(items)) throw new Error('Invalid quote');
-      log('HTTP 200 + Payment-Receipt: cotización recibida, sin compra de inventario.');
+      log('HTTP 200 + Payment-Receipt: quote received. No inventory purchased.');
       const result = {
         requestId, quote: resultQuote, cached: false, trace,
-        payment: { network: 'Tempo Testnet (Moderato)', chainId: CHAIN_ID, currency: 'pathUSD de prueba', feeMicros, fee: PRICE, dailySpentMicros: spentMicros + feeMicros, dailyBudgetMicros: config.maxDailyMicros, receipt, receiptHeader: paid.headers.get('Payment-Receipt') },
+        payment: { network: 'Tempo Testnet (Moderato)', chainId: CHAIN_ID, currency: 'test pathUSD', feeMicros, fee: PRICE, dailySpentMicros: spentMicros + feeMicros, dailyBudgetMicros: config.maxDailyMicros, receipt, receiptHeader: paid.headers.get('Payment-Receipt') },
       };
       entry.status = 'complete'; entry.result = result;
       await store.put('budget-ledger', ledger);
       return json(result);
     } catch {
-      log('Resultado de pago desconocido. Reserva retenida; no hay reintento automático.');
-      throw new ApiError(502, `Resultado de pago desconocido. El gasto sigue reservado y este requestId no volverá a pagar. Revisa el registro del servidor. Transacción Testnet: ${entry.transactionHash ?? 'consulta el registro'}.`);
+      log('Payment outcome unknown. Spending reservation retained; no automatic retry.');
+      throw new ApiError(502, `Payment outcome unknown. Spending remains reserved; this requestId will not pay again. Check the server log. Testnet transaction: ${entry.transactionHash ?? 'check the log'}.`);
     }
   }
 
   return async function handle(request) {
     const url = new URL(request.url);
     try {
-      if (url.pathname === '/api/health') return json({ network: 'tempo-testnet', chainId: CHAIN_ID, realPayments: false, payerConfigured: Boolean(payments.client) });
-      if (url.pathname === '/llms.txt') return new Response('barra. Cotizaciones simuladas de bebidas. GET /api/supplier/quote cuesta 0.01 pathUSD solo en Tempo Testnet 42431. Devuelve HTTP 402, acepta credencial MPP y entrega precios EUR con Payment-Receipt. No compra inventario. Descubrimiento: /openapi.json.');
+      if (url.pathname === '/api/health') return json({ network: 'tempo-testnet', chainId: CHAIN_ID, realPayments: false, payerConfigured: Boolean(payments.client), demoAccessRequired: Boolean(config.demoAccessCode) });
+      if (url.pathname === '/llms.txt') return new Response('barra. Simulated drink supplier quotes. GET /api/supplier/quote costs 0.01 test pathUSD on Tempo Testnet 42431. Returns HTTP 402, accepts MPP credentials and provides EUR prices with Payment-Receipt. No inventory purchase. Discovery: /openapi.json.');
       if (url.pathname === '/openapi.json') return json({
-        openapi: '3.1.0', info: { title: 'barra. Testnet Quote API', version: '1.1.0', description: 'Precios simulados; solo micropagos Testnet; no compra inventario.' },
+        openapi: '3.1.0', info: { title: 'barra. Testnet Quote API', version: '1.1.0', description: 'Simulated prices. Testnet payments only. No inventory purchases.' },
         paths: { '/api/supplier/quote': { get: {
-          summary: 'Cotización simulada de reabastecimiento',
-          parameters: [{ name: 'items', in: 'query', required: false, description: 'Array JSON de {productId,quantity}; omitido usa el inventario inicial de la demo.', schema: { type: 'string' } }],
-          'x-payment-info': { offers: [{ method: 'tempo', intent: 'charge', amount: String(PRICE_MICROS), currency: CURRENCY, description: '0.01 pathUSD de prueba por cotización; Tempo Moderato 42431' }] },
-          responses: { '200': { description: 'Cotización simulada', headers: { 'Payment-Receipt': { schema: { type: 'string' } } } }, '400': { description: 'Productos inválidos' }, '402': { description: 'Payment Required', headers: { 'WWW-Authenticate': { schema: { type: 'string' } } } } },
+          summary: 'Simulated restocking quote',
+          parameters: [{ name: 'items', in: 'query', required: false, description: 'JSON array of {productId,quantity}; defaults to the initial demo inventory.', schema: { type: 'string' } }],
+          'x-payment-info': { offers: [{ method: 'tempo', intent: 'charge', amount: String(PRICE_MICROS), currency: CURRENCY, description: '0.01 test pathUSD per quote; Tempo Moderato 42431' }] },
+          responses: { '200': { description: 'Simulated quote', headers: { 'Payment-Receipt': { schema: { type: 'string' } } } }, '400': { description: 'Invalid products' }, '402': { description: 'Payment Required', headers: { 'WWW-Authenticate': { schema: { type: 'string' } } } } },
         } } },
       });
       if (url.pathname === '/api/supplier/quote') {
-        if (request.method !== 'GET') return json({ error: 'Usa GET.' }, 405);
+        if (request.method !== 'GET') return json({ error: 'Use GET.' }, 405);
         let value;
         try { value = url.searchParams.has('items') ? JSON.parse(url.searchParams.get('items')) : getReplenishment(createInitialState()); }
-        catch { throw new ApiError(400, 'items debe ser JSON válido.'); }
+        catch { throw new ApiError(400, 'items must be valid JSON.'); }
         const items = normalizeItems(value);
-        const result = await payments.server.charge({ amount: PRICE, scope: scopeFor(items), description: 'Cotización simulada de bebidas; sin compra; solo Testnet' })(request);
+        const result = await payments.server.charge({ amount: PRICE, scope: scopeFor(items), description: 'Simulated drink quote. No purchase. Testnet only.' })(request);
         if (result.status === 402) return result.challenge;
         return result.withReceipt(json(quote(items)));
       }
       if (url.pathname === '/api/budget') {
-        if (request.method !== 'POST') return json({ error: 'Usa POST.' }, 405);
+        if (request.method !== 'POST') return json({ error: 'Use POST.' }, 405);
+        if (config.demoAccessCode) {
+          const actual = Buffer.from(request.headers.get('authorization')?.replace(/^Bearer /, '') ?? '');
+          const expected = Buffer.from(config.demoAccessCode);
+          if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) throw new ApiError(401, 'A valid demo access code is required.');
+        }
         // Local single-user MVP: JSON + same-origin rejects drive-by browser payments.
-        if (request.headers.get('origin') && request.headers.get('origin') !== url.origin) throw new ApiError(403, 'Origen no permitido.');
-        if (request.headers.get('content-type')?.split(';')[0] !== 'application/json') throw new ApiError(415, 'Usa application/json.');
+        if (request.headers.get('origin') && request.headers.get('origin') !== url.origin) throw new ApiError(403, 'Origin not allowed.');
+        if (request.headers.get('content-type')?.split(';')[0] !== 'application/json') throw new ApiError(415, 'Use application/json.');
         const text = await request.text();
-        if (text.length > 32_768) throw new ApiError(413, 'Solicitud demasiado grande.');
+        if (text.length > 32_768) throw new ApiError(413, 'Request too large.');
         let body;
-        try { body = JSON.parse(text); } catch { throw new ApiError(400, 'JSON inválido.'); }
+        try { body = JSON.parse(text); } catch { throw new ApiError(400, 'Invalid JSON.'); }
         return await serial(() => budget(body));
       }
-      return json({ error: 'Ruta no encontrada.' }, 404);
+      return json({ error: 'Route not found.' }, 404);
     } catch (error) {
-      logger(`[api] ${error.status ?? 500}: ${error instanceof ApiError ? error.message : 'Error interno; revisa RPC y configuración.'}`);
-      return json({ error: error instanceof ApiError ? error.message : 'Error interno de la API; revisa la terminal.' }, error.status ?? 500);
+      logger(`[api] ${error.status ?? 500}: ${error instanceof ApiError ? error.message : 'Internal error; check RPC and configuration.'}`);
+      return json({ error: error instanceof ApiError ? error.message : 'Internal API error. Check the server log.' }, error.status ?? 500);
     }
   };
 }

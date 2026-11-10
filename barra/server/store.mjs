@@ -6,7 +6,7 @@ export async function openStore(file) {
   let data;
   try { data = JSON.parse(await readFile(file, 'utf8')); }
   catch (error) { if (error.code !== 'ENOENT') throw error; data = {}; }
-  if (!data || Array.isArray(data) || typeof data !== 'object') throw new Error('Registro de gasto inválido.');
+  if (!data || Array.isArray(data) || typeof data !== 'object') throw new Error('Invalid spending ledger.');
   let queue = Promise.resolve();
   const serial = (fn) => {
     const next = queue.then(fn);
