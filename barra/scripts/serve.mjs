@@ -8,6 +8,7 @@ import { createApi } from '../server/api.mjs';
 import { readConfig } from '../server/config.mjs';
 import { createPayments } from '../server/payments.mjs';
 import { openStore } from '../server/store.mjs';
+import { requestUrl } from '../server/request-url.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const mimeTypes = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.json': 'application/json' };
@@ -20,7 +21,7 @@ export async function createBarraServer(options = {}) {
   const api = createApi({ config, store, payments, logger: options.logger, fetchImpl: options.fetchImpl, supplierOrigin: () => `http://127.0.0.1:${server.address().port}` });
   const server = createServer(async (incoming, outgoing) => {
     try {
-      const url = new URL(incoming.url, `http://${incoming.headers.host || '127.0.0.1'}`);
+      const url = requestUrl(incoming.url, incoming.headers, process.env.TRUST_PROXY === 'true');
       const pathname = decodeURIComponent(url.pathname);
       if (pathname.startsWith('/api/') || ['/openapi.json', '/llms.txt'].includes(pathname)) {
         const chunks = [];

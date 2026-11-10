@@ -32,6 +32,7 @@ Use Deployment Center to connect the GitHub repository and the exact branch abov
 Set these in the Web App's environment settings:
 
 - `HOST=0.0.0.0`
+- `TRUST_PROXY=true` (App Service terminates HTTPS before forwarding to Node.)
 - `BARRA_DATA_DIR=/home/barra-data`
 - `MPP_SECRET_KEY`: a random 32-byte hexadecimal secret.
 - `MPP_RECIPIENT`: disposable Testnet recipient address.
@@ -56,6 +57,19 @@ Avoid adding unrelated paid resources, a container registry, paid monitoring or 
 The F1 trial may become inactive and has daily CPU limits. Rehearse the full request shortly before presenting and confirm the public URL is reachable. If continuous availability is required, choose and budget a paid tier separately.
 
 No Azure resources have been created or deployed by these instructions.
+
+## Connect an existing Web App to GitHub
+
+1. In the Azure portal, open **App Services** and select the Web App you created. Keep the plan on Free F1.
+2. Open **Deployment Center → Settings**. Choose **Source: GitHub** and select **Authorize** if requested.
+3. Select owner **BigCarrasco**, repository **MPPHackathon-2026** and branch **codex/mpp-testnet-quotes**. If the private repository is missing, review the GitHub permissions granted to Azure.
+4. Use **User-assigned identity** when your Azure role permits it, review the generated workflow and save. If Azure reports an identity/permission error, retain the error and resolve that role rather than switching authentication settings blindly.
+5. Follow the deployment under **Deployment Center → Logs**, or in the repository's **Actions** tab. A successful build should precede runtime troubleshooting.
+6. In **Settings → Configuration → General settings**, set **Startup Command** to `npm start`.
+7. In **Settings → Environment variables → App settings**, apply the values above. Do not set a custom `PORT`; use Azure's supplied port.
+8. Restart the Web App and select **Browse**. Runtime failures appear in **Monitoring → Log stream**.
+
+To bring up the dashboard first, the required public-binding settings are `HOST`, `TRUST_PROXY`, `BARRA_DATA_DIR` and a new private `DEMO_ACCESS_CODE` of at least 12 characters. Leave both `MPP_SECRET_KEY` and `MPP_RECIPIENT` unset together for temporary unpaid preview configuration. A funded test payer and persistent MPP secret/recipient must be configured before testing paid quotes or submitting the service.
 
 ## Official references
 
